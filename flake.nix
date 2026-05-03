@@ -47,7 +47,8 @@
                 export BOOST_INCLUDEDIR=${pkgs.boost.dev}/include
                 export BOOST_LIBRARYDIR=${pkgs.boost.out}/lib
                 export PKG_CONFIG_PATH=${pkgs.SDL}/lib/pkgconfig:$PKG_CONFIG_PATH
-                export LDFLAGS="-L${pkgs.SDL_image}/lib -L${pkgs.SDL_mixer}/lib -L${pkgs.SDL_ttf}/lib -L${pkgs.SDL_gfx}/lib $LDFLAGS"
+                export CPPFLAGS="-I${pkgs.boost.dev}/include $CPPFLAGS"
+                export LDFLAGS="-L${pkgs.boost.out}/lib -L${pkgs.SDL_image}/lib -L${pkgs.SDL_mixer}/lib -L${pkgs.SDL_ttf}/lib -L${pkgs.SDL_gfx}/lib $LDFLAGS"
                 export SDL_CFLAGS="$(sdl-config --cflags)"
                 export SDL_LIBS="$(sdl-config --libs)"
               '';
