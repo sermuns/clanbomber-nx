@@ -21,6 +21,7 @@
           # devkitNix provides an overlay with the toolchains
           overlays = [ devkitNix.overlays.default ];
         };
+        boostPkg = pkgs.boost;
       in
       {
         # devkitNix provides standard environments which set all the necessary variables and add dependencies.
@@ -32,8 +33,8 @@
             }
             {
               buildInputs = [
-                pkgs.boost
-                pkgs.boost.dev
+                boostPkg
+                boostPkg.dev
                 pkgs.SDL
                 pkgs.SDL_image
                 pkgs.SDL_mixer
@@ -43,12 +44,12 @@
               ];
 
               shellHook = ''
-                export BOOST_ROOT=${pkgs.boost.dev}
-                export BOOST_INCLUDEDIR=${pkgs.boost.dev}/include
-                export BOOST_LIBRARYDIR=${pkgs.boost.out}/lib
+                export BOOST_ROOT=${boostPkg.dev}
+                export BOOST_INCLUDEDIR=${boostPkg.dev}/include
+                export BOOST_LIBRARYDIR=${boostPkg.out}/lib
                 export PKG_CONFIG_PATH=${pkgs.SDL}/lib/pkgconfig:$PKG_CONFIG_PATH
-                export CPPFLAGS="-I${pkgs.boost.dev}/include $CPPFLAGS"
-                export LDFLAGS="-L${pkgs.boost.out}/lib -L${pkgs.SDL_image}/lib -L${pkgs.SDL_mixer}/lib -L${pkgs.SDL_ttf}/lib -L${pkgs.SDL_gfx}/lib $LDFLAGS"
+                export CPPFLAGS="-I${boostPkg.dev}/include $CPPFLAGS"
+                export LDFLAGS="-L${boostPkg.out}/lib -L${pkgs.SDL_image}/lib -L${pkgs.SDL_mixer}/lib -L${pkgs.SDL_ttf}/lib -L${pkgs.SDL_gfx}/lib $LDFLAGS"
                 export SDL_CFLAGS="$(sdl-config --cflags)"
                 export SDL_LIBS="$(sdl-config --libs)"
               '';
