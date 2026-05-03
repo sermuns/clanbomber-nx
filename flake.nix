@@ -48,7 +48,7 @@
                 export BOOST_INCLUDEDIR=${boostPkg.dev}/include
                 export BOOST_LIBRARYDIR=${boostPkg.out}/lib
                 export PKG_CONFIG_PATH=${pkgs.SDL}/lib/pkgconfig:$PKG_CONFIG_PATH
-                export CPPFLAGS="-I${boostPkg.dev}/include -DCB_DATADIR=\"$PWD/clanbomber-2.1.1/src\" -DCB_LOCALEDIR=\"$PWD/clanbomber-2.1.1/po\" $CPPFLAGS"
+                export CPPFLAGS="-I${boostPkg.dev}/include -DCB_DATADIR=\"'$PWD/src'\" -DCB_LOCALEDIR=\"'$PWD/po'\" $CPPFLAGS"
                 export LDFLAGS="-L${boostPkg.out}/lib -L${pkgs.SDL_image}/lib -L${pkgs.SDL_mixer}/lib -L${pkgs.SDL_ttf}/lib -L${pkgs.SDL_gfx}/lib $LDFLAGS"
                 export LD_LIBRARY_PATH="${boostPkg.out}/lib:${pkgs.SDL}/lib:${pkgs.SDL_image}/lib:${pkgs.SDL_mixer}/lib:${pkgs.SDL_ttf}/lib:${pkgs.SDL_gfx}/lib:$LD_LIBRARY_PATH"
                 export SDL_CFLAGS="$(sdl-config --cflags)"
