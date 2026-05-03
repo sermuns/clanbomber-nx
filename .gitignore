@@ -2,6 +2,7 @@
 
 config.*
 
+*.cache
 
 Makefile
 
@@ -15,3 +16,5 @@ Makefile
 *.o
 
 stamp-h1
+
+*~
