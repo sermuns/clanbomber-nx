@@ -23,3 +23,5 @@ stamp-h1
 *.lzma
 
 src/clanbomber2
+
+/build
