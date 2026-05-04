@@ -1,8 +1,9 @@
 .direnv
 
-config.*
-
 *.cache
+config.log
+config.status
+config.h
 
 Makefile
 
@@ -18,3 +19,7 @@ Makefile
 stamp-h1
 
 *~
+
+*.lzma
+
+src/clanbomber2
