@@ -30,19 +30,31 @@
 
 #include "ClanBomber.h"
 #include "GameStatus.h"
+#ifndef CLANBOMBER_NO_NETWORKING
+#ifndef CLANBOMBER_NO_NETWORKING
 #include "ServerSetup.h"
 #include "Client.h"
+#endif
+#endif
 #include "GameObject.h"
 #include "GameConfig.h"
 #include "Timer.h"
 #include "Bomber.h"
 #include "Map.h"
+#ifndef CLANBOMBER_NO_NETWORKING
+#ifndef CLANBOMBER_NO_NETWORKING
 #include "Server.h"
+#endif
+#endif
 #include "Chat.h"
 #include "Utils.h"
 
 static GameStatus* game_status = NULL;
+#ifdef CLANBOMBER_NO_NETWORKING
+static struct SimpleTimer { void reset() {} float elapsed() { return 0.0f; } } demo_mode_timer;
+#else
 static SimpleTimer demo_mode_timer;
+#endif
 static float pokal_scroll_in = 800;
 
 GameStatus::GameStatus(ClanBomberApplication* _app)
@@ -65,53 +77,61 @@ void GameStatus::show()
 
 	bool space = true;//Is this really needed
 
-	while (((server_acts || !client_acts) && !space_pressed) ||
-           (!server_acts && client_acts && !ClanBomberApplication::get_client()->server_started_new_map())) {
-		if (server_acts) {
-			ClanBomberApplication::get_server()->disconnect_dead_clients();
-			ClanBomberApplication::get_server()->send_SERVER_KEEP_ALIVE();
-		}
-		else if (client_acts) {
-			if (escape_pressed && !space_pressed) {
-				ClientSetup::end_session();
-				ClanBomberApplication::get_client()->send_CLIENT_DISCONNECT();
-				break;
-			}
-			else {
-				ClanBomberApplication::get_client()->disconnect_from_server();
-				ClanBomberApplication::get_client()->send_CLIENT_KEEP_ALIVE();
-			}
-			space_pressed = false;
-			escape_pressed = false;
-		}
-		if (!end_of_game && server_acts && ClanBomberApplication::get_server()->is_in_demo_mode()) {
-			if (demo_mode_timer.elapsed()>NET_SERVER_PAUSE_MILLISECONDS_BETWEEN_MAPS) {
-				break;
-			}
-		}
-		if (!server_acts && client_acts && ClanBomberApplication::get_client()->end_game()) {
-			break;
-		}
+while (((server_acts || !client_acts) && !space_pressed) ||
+       (!server_acts && client_acts
+#ifndef CLANBOMBER_NO_NETWORKING
+        && !ClanBomberApplication::get_client()->server_started_new_map()
+#endif
+       )) {
+#ifndef CLANBOMBER_NO_NETWORKING
+    if (server_acts) {
+      ClanBomberApplication::get_server()->disconnect_dead_clients();
+      ClanBomberApplication::get_server()->send_SERVER_KEEP_ALIVE();
+    }
+    else if (client_acts) {
+      if (escape_pressed && !space_pressed) {
+        ClientSetup::end_session();
+        ClanBomberApplication::get_client()->send_CLIENT_DISCONNECT();
+        break;
+      }
+      else {
+        ClanBomberApplication::get_client()->disconnect_from_server();
+        ClanBomberApplication::get_client()->send_CLIENT_KEEP_ALIVE();
+      }
+      space_pressed = false;
+      escape_pressed = false;
+    }
+    if (!end_of_game && server_acts && ClanBomberApplication::get_server()->is_in_demo_mode()) {
+      if (demo_mode_timer.elapsed() > NET_SERVER_PAUSE_MILLISECONDS_BETWEEN_MAPS) {
+        break;
+      }
+    }
+    if (!server_acts && client_acts && ClanBomberApplication::get_client()->end_game()) {
+      break;
+    }
+#endif
 		//DFBInputEvent evt;
 		SDL_Event event;
 		//while (keybuffer->GetEvent( keybuffer, DFB_EVENT(&evt) ) == DFB_OK) {
 		while (SDL_PollEvent(&event)) {
 		  if (event.type == SDL_KEYDOWN) {
 		    switch (event.key.keysym.sym) {
-		    case SDLK_BACKSPACE:
-		      if (server_acts) {
-			Chat::show();
-			ServerSetup::enter_chat_message(true);
-			ClanBomberApplication::get_client()->reset_new_chat_message_arrived();
-			Chat::hide();
-		      }
-		      else if (client_acts) {
-			Chat::show();
-			ClientSetup::enter_chat_message(true);
-			ClanBomberApplication::get_client()->reset_new_chat_message_arrived();
-			Chat::hide();
-		      }
-		      break;
+        case SDLK_BACKSPACE:
+#ifndef CLANBOMBER_NO_NETWORKING
+          if (server_acts) {
+        Chat::show();
+        ServerSetup::enter_chat_message(true);
+        ClanBomberApplication::get_client()->reset_new_chat_message_arrived();
+        Chat::hide();
+          }
+          else if (client_acts) {
+        Chat::show();
+        ClientSetup::enter_chat_message(true);
+        ClanBomberApplication::get_client()->reset_new_chat_message_arrived();
+        Chat::hide();
+          }
+#endif
+          break;
 		    case SDLK_SPACE:
 		      space_pressed = true;
 		    case SDLK_ESCAPE:
@@ -165,22 +185,28 @@ void GameStatus::draw()
   Resources::Gamestatus_background()->blit(0, 0);
   //primary->SetColor( primary, 0xFF, 0xFF, 0xFF, 0xFF );
   if (server_acts || !client_acts) {
-    if (server_acts && Chat::enabled()) {
+    if (server_acts
+#ifndef CLANBOMBER_NO_NETWORKING
+        && Chat::enabled()
+#endif
+        ) {
+#ifndef CLANBOMBER_NO_NETWORKING
       if (ClanBomberApplication::get_server()->is_in_demo_mode() && !game_status->end_of_game) {
-	float seconds = (NET_SERVER_PAUSE_MILLISECONDS_BETWEEN_MAPS - demo_mode_timer.elapsed()) / 1000;
-	std::string nstr = str(boost::format(_("PRESS SPACE TO CONTINUE  (autostart %.02f s)")) % seconds);
-	//primary->DrawString( primary, CL_String(), -1, 360, 570, DSTF_TOPCENTER );
-	Resources::Font_small()->render(nstr, 360, 570,
+    float seconds = (NET_SERVER_PAUSE_MILLISECONDS_BETWEEN_MAPS - demo_mode_timer.elapsed()) / 1000;
+    std::string nstr = str(boost::format(_("PRESS SPACE TO CONTINUE  (autostart %.02f s)")) % seconds);
+    Resources::Font_small()->render(nstr, 360, 570,
                                         cbe::FontAlignment_0topcenter);
       }
       else {
-	//primary->DrawString( primary, "PRESS SPACE TO CONTINUE", -1, 400, 570, DSTF_TOPCENTER );
-	Resources::Font_small()->render(_("PRESS SPACE TO CONTINUE"), 400, 570,
+    Resources::Font_small()->render(_("PRESS SPACE TO CONTINUE"), 400, 570,
                                         cbe::FontAlignment_0topcenter);
       }
+#else
+      Resources::Font_small()->render(_("PRESS SPACE TO CONTINUE"), 400, 570,
+                                      cbe::FontAlignment_0topcenter);
+#endif
     }
     else {
-      //primary->DrawString( primary, "PRESS SPACE TO CONTINUE", -1, 400, 570, DSTF_TOPCENTER );
       Resources::Font_small()->render(_("PRESS SPACE TO CONTINUE"), 400, 570,
                                       cbe::FontAlignment_0topcenter);
     }

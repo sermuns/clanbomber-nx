@@ -31,7 +31,9 @@
 //#define BOOST_FILESYSTEM_NO_DEPRECATED
 #include <boost/filesystem.hpp>
 #include <boost/format.hpp>
+#ifdef ENABLE_CONSOLE
 #include <boost/thread.hpp>
+#endif
 #include "SDL.h"
 
 #include "config.h"
@@ -41,11 +43,13 @@
 #include "Menu.h"
 #include "Timer.h"
 #include "PlayerSetup.h"
+#ifndef CLANBOMBER_NO_NETWORKING
 #include "ServerSetup.h"
 #include "Server.h"
-#include "Chat.h"
 #include "ClientSetup.h"
 #include "Client.h"
+#endif
+#include "Chat.h"
 #include "Map.h"
 #include "Credits.h"
 #include "MapEditor.h"
@@ -84,15 +88,19 @@ bool game_object_compare(GameObject* go1, GameObject* go2)
 
 ClanBomberApplication::ClanBomberApplication()
 {
+#ifndef CLANBOMBER_NO_NETWORKING
   cb_server = NULL;
   cb_client = NULL;
+#endif
   server_status = 0;
   observer = NULL;
   map = NULL;
   cb_mutex = new Mutex();
   cb_event = new Event();
+#ifndef CLANBOMBER_NO_NETWORKING
   client_setup_menu = NULL;
   server_setup_menu = NULL;
+#endif
   pause_game = false;
   client_disconnected_from_server = false;
   client_connecting_to_new_server = false;
@@ -117,6 +125,7 @@ ClanBomberApplication::~ClanBomberApplication()
   delete cb_mutex;
   cb_mutex = NULL;
 
+#ifndef CLANBOMBER_NO_NETWORKING
   if (cb_server) {
     delete cb_server;
     cb_server = NULL;
@@ -136,6 +145,7 @@ ClanBomberApplication::~ClanBomberApplication()
     delete client_setup_menu;
     client_setup_menu = NULL;
   }
+#endif
 }
 
 int ClanBomberApplication::init_SDL()
@@ -181,6 +191,7 @@ int ClanBomberApplication::init_SDL()
 
 void ClanBomberApplication::start_net_game()
 {
+#ifndef CLANBOMBER_NO_NETWORKING
   if (is_server()) {
     cb_server->send_SERVER_FULL_BOMBER_CONFIG();
     cb_server->send_SERVER_CONFIG();
@@ -188,6 +199,7 @@ void ClanBomberApplication::start_net_game()
   init_net_game();
   run_game();
   deinit_game();
+#endif
 }
 
 bool ClanBomberApplication::paused_game()
@@ -307,8 +319,10 @@ int ClanBomberApplication::main()
 
   menu->add_item(_("New Game"), MENU_GAME);
   menu->add_item(_("Start Local"), LOCALGAME_START, MENU_GAME);
+#ifndef CLANBOMBER_NO_NETWORKING
   menu->add_item(_("Create Server"), SERVERGAME_START, MENU_GAME);
   menu->add_item(_("Join Server"), CLIENTGAME_START, MENU_GAME);
+#endif
   menu->add_item(_("Local Player Setup"), MENU_PLAYER_SETUP, MENU_GAME);
   menu->add_item(_("Map Selection"), CONFIG_MAP_SEL, MENU_GAME);
   menu->add_value(_("Random Bomber Positions"), CONFIG_RANDOM_POSITIONS,
@@ -621,6 +635,7 @@ int ClanBomberApplication::main()
         menu->scroll_in();
       }
       break;
+#ifndef CLANBOMBER_NO_NETWORKING
     case SERVERGAME_START:
       menu->scroll_out();
       Config::save();
@@ -653,6 +668,7 @@ int ClanBomberApplication::main()
       menu->scroll_in();
       menu->set_left_netgame_setup();
       break;
+#endif
     default:
       std::cout << result << std::endl;
       break;
@@ -662,6 +678,9 @@ int ClanBomberApplication::main()
 
 bool ClanBomberApplication::init_server_game()
 {
+#ifdef CLANBOMBER_NO_NETWORKING
+  return false;
+#endif
   make_map();
   if (!map->any_valid_map()) {
     delete map;
@@ -745,6 +764,9 @@ bool ClanBomberApplication::init_server_game()
 
 bool ClanBomberApplication::init_client_game()
 {
+#ifdef CLANBOMBER_NO_NETWORKING
+  return false;
+#endif
   server_status = 2;
   int previous_client_index = -1;
   std::string new_string(Config::get_last_server());
@@ -850,6 +872,23 @@ void ClanBomberApplication::inc_server_frame_counter()
 
 void ClanBomberApplication::run_game()
 {
+#ifdef CLANBOMBER_NO_NETWORKING
+  cb_mutex->lock();
+  if (map != NULL) {
+    map->act();
+  }
+  for (std::list<GameObject*>::iterator object_iter = objects.begin();
+       object_iter != objects.end();
+       object_iter++) {
+    (*object_iter)->act();
+  }
+  for (std::list<Bomber*>::iterator bomber_object_iter = bomber_objects.begin();
+       bomber_object_iter != bomber_objects.end();
+       bomber_object_iter++) {
+    (*bomber_object_iter)->act();
+  }
+  cb_mutex->unlock();
+#else
   if (!is_server() && is_client()) {
     cb_event->lock();
     if (!map->is_received_by_client) {
@@ -1001,6 +1040,7 @@ void ClanBomberApplication::run_game()
     cb_server->send_SERVER_END_OF_GAME();
     cb_server->send_update_messages_to_clients(server_frame_counter);
   }
+#endif
 }
 
 int ClanBomberApplication::get_server_status()
@@ -1010,22 +1050,34 @@ int ClanBomberApplication::get_server_status()
 
 Server* ClanBomberApplication::get_server()
 {
+#ifdef CLANBOMBER_NO_NETWORKING
+  return NULL;
+#endif
   return app->cb_server;
 
 }
 
 Client* ClanBomberApplication::get_client()
 {
+#ifdef CLANBOMBER_NO_NETWORKING
+  return NULL;
+#endif
   return app->cb_client;
 }
 
 ServerSetup* ClanBomberApplication::get_server_setup()
 {
+#ifdef CLANBOMBER_NO_NETWORKING
+  return NULL;
+#endif
   return app->server_setup_menu;
 }
 
 ClientSetup* ClanBomberApplication::get_client_setup()
 {
+#ifdef CLANBOMBER_NO_NETWORKING
+  return NULL;
+#endif
   return app->client_setup_menu;
 }
 
@@ -1046,12 +1098,18 @@ int ClanBomberApplication::run_server_with_players()
 
 bool ClanBomberApplication::is_server()
 {
+#ifdef CLANBOMBER_NO_NETWORKING
+  return false;
+#endif
   return (app->get_server_status() == 1 && app->get_server() != NULL
           && app->get_client() != NULL);
 }
 
 bool ClanBomberApplication::is_client()
 {
+#ifdef CLANBOMBER_NO_NETWORKING
+  return false;
+#endif
   return ((app->get_server_status() == 1 || app->get_server_status() == 2)
           && app->get_client() != NULL);
 }
@@ -1132,6 +1190,7 @@ void ClanBomberApplication::act_all()
   for (std::list<GameObject*>::iterator object_iter = objects.begin();
        object_iter != objects.end();
        object_iter++) {
+#ifndef CLANBOMBER_NO_NETWORKING
     if (!is_server() && is_client()) {
       if ((*object_iter)->get_type() == GameObject::BOMB
           && !(*object_iter)->is_flying()
@@ -1149,11 +1208,15 @@ void ClanBomberApplication::act_all()
         continue;
       }
     }
+#endif
     (*object_iter)->act();
   }
   for (std::list<Bomber*>::iterator bomber_object_iter = bomber_objects.begin();
        bomber_object_iter != bomber_objects.end();
        bomber_object_iter++) {
+#ifdef CLANBOMBER_NO_NETWORKING
+    (*bomber_object_iter)->act();
+#else
     if (!is_client()) {
       (*bomber_object_iter)->act();
     }
@@ -1180,6 +1243,7 @@ void ClanBomberApplication::act_all()
                                              ->get_client_dir());
       }
     }
+#endif
   }
   cb_mutex->unlock();
 }
@@ -1203,19 +1267,23 @@ void ClanBomberApplication::delete_some()
        bomber_object_iter != bomber_objects.end();
        bomber_object_iter++) {
     if ((*bomber_object_iter)->delete_me) {
+#ifndef CLANBOMBER_NO_NETWORKING
       if (is_client()) {
         (*bomber_object_iter)->reset();
         (*bomber_object_iter)->controller->deactivate();
         (*bomber_object_iter)->set_dead();
       }
+#endif
       obj_ids[nr++] = (*bomber_object_iter)->get_object_id();
     }
   }
   cb_mutex->unlock();
+#ifndef CLANBOMBER_NO_NETWORKING
   if (is_server() && nr > 0) {
     ClanBomberApplication::get_server()->send_SERVER_DELETE_OBJECTS(nr,
                                                                     obj_ids);
   }
+#endif
 }
 
 void ClanBomberApplication::show_all()
@@ -1282,6 +1350,9 @@ void ClanBomberApplication::show_all()
 
 void ClanBomberApplication::init_net_game()
 {
+#ifdef CLANBOMBER_NO_NETWORKING
+  return;
+#endif
   frame_count = 0;
   frame_time = 0;
   fps = 0;
@@ -1451,9 +1522,11 @@ void ClanBomberApplication::deinit_game()
     delete *bomber_object_iter;
   }
   bomber_objects.clear();
+#ifndef CLANBOMBER_NO_NETWORKING
   if (is_server()) {
     cb_server->bomber_objects.clear();
   }
+#endif
   if (observer) {
     delete observer;
     observer = NULL;

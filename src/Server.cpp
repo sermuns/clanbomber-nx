@@ -1888,6 +1888,7 @@ void Server::recv_CLIENT_READY_TO_PLAY(int* data, int* pos, int from_client_inde
     send_SERVER_CLIENT_READY_TO_PLAY(from_client_index, client_ready_to_play);
 }
 
+#ifndef CLANBOMBER_NO_NETWORKING
 SimpleTimer::SimpleTimer()
 {
     start_time=new (struct timeval);
@@ -1923,3 +1924,4 @@ float SimpleTimer::elapsedn()
     int time_now=current_time->tv_sec*1000000+current_time->tv_usec;
     return (time_now-time_start);
 }
+#endif

@@ -25,7 +25,11 @@
 #define Bomber_h
 
 #include "GameObject.h"
+#ifndef CLANBOMBER_NO_NETWORKING
 #include "Server.h"
+#else
+class SimpleTimer;
+#endif
 
 class Disease;
 class Controller;
@@ -162,7 +166,11 @@ protected:
 	int team;
 	int number;
 	Direction server_send_dir;
-	SimpleTimer allow_putbomb_timer;
+#ifdef CLANBOMBER_NO_NETWORKING
+    struct SimpleTimer { void reset() {} } allow_putbomb_timer;
+#else
+    SimpleTimer allow_putbomb_timer;
+#endif
 	bool has_disconnected;
 };
 

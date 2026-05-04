@@ -29,8 +29,10 @@
 #include "Timer.h"
 #include "Bomber.h"
 #include "Bomb.h"
+#ifndef CLANBOMBER_NO_NETWORKING
 #include "Server.h"
 #include "Client.h"
+#endif
 #include "Mutex.h"
 #include "Utils.h"
 
@@ -85,12 +87,16 @@ GameObject::GameObject( int _x, int _y, ClanBomberApplication *_app )
 	opacity = 0xff;
 	opacity_scaled = 0xff;
 
-	if (ClanBomberApplication::is_server()) {
-		object_id = ClanBomberApplication::get_next_object_id();
-	}
-	else {
-		object_id = 0;
-	}
+#ifdef CLANBOMBER_NO_NETWORKING
+  object_id = ClanBomberApplication::get_next_object_id();
+#else
+  if (ClanBomberApplication::is_server()) {
+    object_id = ClanBomberApplication::get_next_object_id();
+  }
+  else {
+    object_id = 0;
+  }
+#endif
 	server_dir = cur_dir;
 	client_dir = cur_dir;
 	local_dir = cur_dir;

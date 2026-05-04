@@ -24,7 +24,9 @@
 #ifndef _header_clanbomber_client_
 #define _header_clanbomber_client_
 
+#ifndef CLANBOMBER_NO_NETWORKING
 #include <boost/asio.hpp>
+#endif
 
 #include "ClanBomber.h"
 #include "Server.h"

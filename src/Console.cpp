@@ -24,7 +24,9 @@
 #include <cstdlib>
 
 #include <libguile.h>
+#ifdef ENABLE_CONSOLE
 #include <boost/thread.hpp>
+#endif
 #include <boost/filesystem.hpp>
 
 #include "ClanBomber.h"

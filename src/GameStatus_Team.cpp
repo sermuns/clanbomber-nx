@@ -33,15 +33,21 @@
 #include "Timer.h"
 #include "Bomber.h"
 #include "Map.h"
+#ifndef CLANBOMBER_NO_NETWORKING
 #include "Client.h"
 #include "ClientSetup.h"
 #include "Server.h"
 #include "ServerSetup.h"
+#endif
 #include "Chat.h"
 #include "Utils.h"
 
 static GameStatus_Team* game_status_team = NULL;
+#ifdef CLANBOMBER_NO_NETWORKING
+static struct SimpleTimer { void reset() {} float elapsed() { return 0.0f; } } demo_mode_timer;
+#else
 static SimpleTimer demo_mode_timer;
+#endif
 
 const char* GameStatus_Team::team_names[4] = {
   N_("Blood Team"),
@@ -72,7 +78,12 @@ void GameStatus_Team::show()
   bool escape_pressed = false;
 
   while (((server_acts || !client_acts) && !space_pressed) ||
-         (!server_acts && client_acts && !ClanBomberApplication::get_client()->server_started_new_map())) {
+         (!server_acts && client_acts
+#ifndef CLANBOMBER_NO_NETWORKING
+          && !ClanBomberApplication::get_client()->server_started_new_map()
+#endif
+         )) {
+#ifndef CLANBOMBER_NO_NETWORKING
     if (server_acts) {
       ClanBomberApplication::get_server()->disconnect_dead_clients();
       ClanBomberApplication::get_server()->send_SERVER_KEEP_ALIVE();
@@ -98,11 +109,13 @@ void GameStatus_Team::show()
     if (!server_acts && client_acts && ClanBomberApplication::get_client()->end_game()) {
       break;
     }
+#endif
     SDL_Event event;
     while (SDL_PollEvent(&event)) {
       if (event.type == SDL_KEYDOWN) {
         switch (event.key.keysym.sym) {
         case SDLK_BACKSPACE:
+#ifndef CLANBOMBER_NO_NETWORKING
           if (server_acts) {
             Chat::show();
             ServerSetup::enter_chat_message(true);
@@ -115,6 +128,7 @@ void GameStatus_Team::show()
             ClanBomberApplication::get_client()->reset_new_chat_message_arrived();
             Chat::hide();
           }
+#endif
           break;
         case SDLK_SPACE:
           space_pressed = true;
@@ -177,7 +191,12 @@ void GameStatus_Team::draw()
   game_status_team->team_count[0] = game_status_team->team_count[1] = game_status_team->team_count[2] = game_status_team->team_count[3] = 0;
   Resources::Gamestatus_background()->blit(0, 0);
   if (server_acts || !client_acts) {
-    if (server_acts && !Chat::enabled()) {
+    if (server_acts
+#ifndef CLANBOMBER_NO_NETWORKING
+        && !Chat::enabled()
+#endif
+        ) {
+#ifndef CLANBOMBER_NO_NETWORKING
       if (ClanBomberApplication::get_server()->is_in_demo_mode() && !game_status_team->end_of_game) {
         float seconds = (NET_SERVER_PAUSE_MILLISECONDS_BETWEEN_MAPS - demo_mode_timer.elapsed()) / 1000;
         std::string nstr = str(boost::format(_("PRESS SPACE TO CONTINUE  (autostart %.02f s)")) % seconds);
@@ -190,6 +209,11 @@ void GameStatus_Team::draw()
                                         400, 570,
                                         cbe::FontAlignment_0topcenter);
       }
+#else
+      Resources::Font_small()->render(_("PRESS SPACE TO CONTINUE"),
+                                      400, 570,
+                                      cbe::FontAlignment_0topcenter);
+#endif
     }
     else {
       Resources::Font_small()->render(_("PRESS SPACE TO CONTINUE"), 400,

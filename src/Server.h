@@ -26,7 +26,9 @@
 
 #include <list>
 
+#ifndef CLANBOMBER_NO_NETWORKING
 #include <boost/asio.hpp>
+#endif
 
 class Mutex;
 class Event;

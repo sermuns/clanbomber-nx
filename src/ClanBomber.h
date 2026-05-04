@@ -131,8 +131,10 @@ class ClanBomberApplication
   std::list<GameObject*> objects;
   std::list<Bomber*> bomber_objects;
 
+#ifndef CLANBOMBER_NO_NETWORKING
   bool init_server_game();
   bool init_client_game();
+#endif
   int get_server_status();
   static int run_server_with_players();
   /**
@@ -148,10 +150,12 @@ class ClanBomberApplication
    */
   static bool is_client();
 
+#ifndef CLANBOMBER_NO_NETWORKING
   static Server* get_server();
   static Client* get_client();
   static ServerSetup* get_server_setup();
   static ClientSetup* get_client_setup();
+#endif
   static Chat* get_chat();
   static Menu* get_menu();
 
@@ -200,13 +204,17 @@ class ClanBomberApplication
   void act_all();
   void delete_some();
 
+#ifndef CLANBOMBER_NO_NETWORKING
   void start_net_game();
   void init_net_game();
+#endif
 
+#ifndef CLANBOMBER_NO_NETWORKING
   Server* cb_server;
   Client* cb_client;
   ClientSetup* client_setup_menu;
   ServerSetup* server_setup_menu;
+#endif
   Chat* chat;
   Menu* menu;
 
