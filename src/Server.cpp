@@ -467,8 +467,7 @@ bool Server::add_client(char* client_name, char* client_ip)
   ///client_addresses[free_index]=(sockaddr*)act_addr_in;
   //udp::endpoint *endpoint = new udp::endpoint(udp::v4(), NET_CLIENT_UDP_PORT);
   udp::endpoint *endpoint = new udp::endpoint;
-  boost::asio::ip::address address;
-  address.from_string(client_ip);
+  boost::asio::ip::address address = boost::asio::ip::make_address(client_ip);
   endpoint->address(address);
   endpoint->port(NET_CLIENT_UDP_PORT);
   client_endpoint[free_index] = endpoint;

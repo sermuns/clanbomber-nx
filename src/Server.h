@@ -237,7 +237,7 @@ class Server
         char* client_ips[NET_SERVER_MAX_CLIENTS];
         bool big_endian;
         bool client_convert[NET_SERVER_MAX_CLIENTS];
-        boost::asio::io_service io_service;
+        boost::asio::io_context io_service;
 	boost::asio::ip::tcp::acceptor *my_tcp_acceptor;
         boost::asio::ip::udp::socket *my_udp_socket;
         int nr_of_clients;

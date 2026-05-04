@@ -359,7 +359,7 @@ void Menu::redraw( bool options_menu_hack, int yoffset )
 // 	primary->SetFont( primary, Resources::Font_small()  );
 // 	primary->SetColor(primary, 0xFF, 0xFF, 0xFF, 0xFF );
 // 	primary->DrawString( primary, "V"VERSION, -1, right_border+20, vert+20, DSTF_TOPRIGHT );
-	Resources::Font_small()->render("V"PACKAGE_VERSION, right_border+20,
+	Resources::Font_small()->render("V" PACKAGE_VERSION, right_border+20,
                                         vert+20, cbe::FontAlignment_0topright);
 	// primary->Flip( primary, NULL, DSFLIP_WAITFORSYNC  );
 	CB_Flip();

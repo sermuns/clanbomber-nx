@@ -47,7 +47,7 @@ protected:
 	int   speed;
 	bool  stopped;
  private:
-	static const float yoffset_start = 50;
+	static constexpr float yoffset_start = 50.0f;
 	static const int normal_speed = 40;
 	static const int text_height = 40;
 	

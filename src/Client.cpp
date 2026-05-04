@@ -444,8 +444,9 @@ bool Client::init_tcp_socket()
   net_server_tcp_port << NET_SERVER_TCP_PORT;
 
   tcp::resolver resolver(io_service);
-  tcp::resolver::query query(tcp::v4(), server_name, net_server_tcp_port.str());
-  tcp::endpoint endpoint = *resolver.resolve(query);
+  tcp::resolver::results_type results =
+      resolver.resolve(tcp::v4(), server_name, net_server_tcp_port.str());
+  tcp::endpoint endpoint = results.begin()->endpoint();
 
   my_tcp_socket = new tcp::socket(io_service);
 
@@ -503,8 +504,9 @@ bool Client::init_udp_socket()
   net_server_udp_port << NET_SERVER_UDP_PORT;
 
   udp::resolver resolver(io_service);
-  udp::resolver::query query(udp::v4(), server_name, net_server_udp_port.str());
-  receiver_endpoint = *resolver.resolve(query);
+  udp::resolver::results_type results =
+      resolver.resolve(udp::v4(), server_name, net_server_udp_port.str());
+  receiver_endpoint = *results.begin();
 
   udp::endpoint bind_endpoint;
   bind_endpoint.port(NET_CLIENT_UDP_PORT);

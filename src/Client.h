@@ -204,7 +204,7 @@ class Client
         char* my_ip;
         char* server_name;
         char* server_ip;
-        boost::asio::io_service io_service;
+        boost::asio::io_context io_service;
         boost::asio::ip::udp::endpoint receiver_endpoint;
         boost::asio::ip::tcp::socket *my_tcp_socket;
         boost::asio::ip::udp::socket *my_udp_socket;

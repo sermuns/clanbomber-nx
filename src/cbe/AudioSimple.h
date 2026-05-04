@@ -38,7 +38,7 @@ namespace cbe
     virtual void close() = 0;
     virtual ~AudioSimple() {};
     virtual AudioBuffer *createBuffer(boost::filesystem::path file) = 0;
-    static std::string getName() {};
+    static std::string getName() { return std::string(); };
   };
 };
 
